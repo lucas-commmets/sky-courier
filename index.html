@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#123041">
+  <meta name="description" content="Fly the Sky Courier, dodge storm clouds, and deliver parcels.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Sky Courier">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Sky Courier</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="icon" href="./icon-192.png" type="image/png" sizes="192x192">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <section id="authPanel" class="auth-panel" aria-labelledby="authTitle" hidden>
+    <header>
+      <h1 id="authTitle">Sky Courier</h1>
+      <p>Log in to save your best score and view your attempts.</p>
+    </header>
+    <form id="authForm">
+      <label for="authEmail">Email</label>
+      <input id="authEmail" name="email" type="email" autocomplete="email" required>
+      <label for="authPassword">Password</label>
+      <input id="authPassword" name="password" type="password"
+        autocomplete="current-password" minlength="6" required>
+      <label for="displayName">Display name <span>(needed when creating an account)</span></label>
+      <input id="displayName" name="displayName" maxlength="12" autocomplete="nickname">
+      <div class="auth-actions">
+        <button type="submit" name="authAction" value="login">Log in</button>
+        <button type="submit" name="authAction" value="signup">Create account</button>
+      </div>
+      <p id="authStatus" role="status" aria-live="polite"></p>
+    </form>
+    <p class="privacy-note">Display names and scores are visible to everyone.</p>
+  </section>
+
+  <main id="gameShell" class="game-shell" hidden>
+    <header>
+      <h1>Sky Courier</h1>
+      <p>Collect parcels, dodge storms, and deliver.</p>
+    </header>
+    <div id="accountBar" class="account-bar" hidden>
+      <span id="accountName"></span>
+      <button id="logoutButton" type="button">Log out</button>
+    </div>
+    <canvas id="game" width="360" height="640" aria-label="Sky Courier game"></canvas>
+    <nav id="leaderboardTabs" class="leaderboard-tabs" role="tablist"
+      aria-label="Leaderboard difficulty" hidden>
+      <button type="button" role="tab" data-leaderboard-level="easy"
+        aria-selected="false" tabindex="-1">Easy</button>
+      <button type="button" role="tab" data-leaderboard-level="normal"
+        aria-selected="true" tabindex="0">Normal</button>
+      <button type="button" role="tab" data-leaderboard-level="hard"
+        aria-selected="false" tabindex="-1">Hard</button>
+    </nav>
+    <nav class="game-controls" aria-label="Game controls">
+      <button id="difficultyButton" type="button">Difficulty: Normal</button>
+      <button id="actionButton" type="button">Start flight</button>
+    </nav>
+    <form id="nameForm" hidden>
+      <label for="playerName">Enter your name for the leaderboard</label>
+      <div class="name-entry">
+        <input id="playerName" name="playerName" maxlength="12" autocomplete="nickname" required>
+        <button type="submit">Save score</button>
+      </div>
+    </form>
+    <details id="historyDetails" class="history-details" hidden>
+      <summary>Show all attempts</summary>
+      <div class="history-popover">
+        <p id="historyStatus" role="status" aria-live="polite"></p>
+        <ol id="attemptHistory" class="attempt-history"></ol>
+      </div>
+    </details>
+    <button id="installButton" class="install-button" type="button" hidden>Install game</button>
+    <footer>Install from your browser. Your personal best stays on this device.</footer>
+  </main>
+  <script src="./config.js"></script>
+  <script src="./game.js" defer></script>
+</body>
+</html>
