@@ -73,6 +73,7 @@
   let currentDisplayName = "";
   let best = readNumber("skyCourierBest");
   let runNewBest = false;
+  let deathImpact = null;
   let runId = 0;
   let deliveries = 0;
   let cargo = 0;
@@ -520,7 +521,7 @@
         : state === "record" ? "Enter your name"
           : failedScore ? "Retry score" : "Try again";
     actionButton.disabled = state === "record" || scoreRequestInFlight;
-    difficultyButton.disabled = state !== "menu";
+    difficultyButton.disabled = state === "playing";
     leaderboardTabs.hidden = state !== "record" && state !== "over";
     historyDetails.hidden = state !== "record" && state !== "over";
     leaderboardTabButtons.forEach((button) => {
@@ -599,6 +600,7 @@
   function startRun() {
     failedScore = null;
     scoreRequestInFlight = false;
+    deathImpact = null;
     runId += 1;
     runDifficulty = difficulty.key;
     selectedLeaderboardDifficulty = runDifficulty;
@@ -622,8 +624,10 @@
     chirp();
   }
 
-  function finishRun() {
+  function finishRun(impact) {
     if (state !== "playing") return;
+    deathImpact = impact || null;
+    if (deathImpact) playImpactSound(deathImpact);
     state = "over";
     const completedRunId = runId;
     if (score > best) {
@@ -676,6 +680,46 @@
     gain.connect(audioContext.destination);
     oscillator.start();
     oscillator.stop(audioContext.currentTime + 0.1);
+  }
+
+  function playImpactSound(impact) {
+    if (!audioContext) return;
+    const isKaboom = impact === "kaboom";
+    const duration = isKaboom ? 0.42 : 0.2;
+    const now = audioContext.currentTime;
+    const noiseBuffer = audioContext.createBuffer(
+      1, Math.ceil(audioContext.sampleRate * duration), audioContext.sampleRate,
+    );
+    const noiseSamples = noiseBuffer.getChannelData(0);
+    for (let index = 0; index < noiseSamples.length; index += 1) {
+      noiseSamples[index] = (Math.random() * 2 - 1) * (1 - index / noiseSamples.length);
+    }
+
+    const noise = audioContext.createBufferSource();
+    const filter = audioContext.createBiquadFilter();
+    const noiseGain = audioContext.createGain();
+    noise.buffer = noiseBuffer;
+    filter.type = "lowpass";
+    filter.frequency.setValueAtTime(isKaboom ? 750 : 1500, now);
+    noiseGain.gain.setValueAtTime(isKaboom ? 0.22 : 0.17, now);
+    noiseGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    noise.connect(filter);
+    filter.connect(noiseGain);
+    noiseGain.connect(audioContext.destination);
+    noise.start(now);
+    noise.stop(now + duration);
+
+    const tone = audioContext.createOscillator();
+    const toneGain = audioContext.createGain();
+    tone.type = isKaboom ? "sawtooth" : "triangle";
+    tone.frequency.setValueAtTime(isKaboom ? 150 : 220, now);
+    tone.frequency.exponentialRampToValueAtTime(isKaboom ? 42 : 80, now + duration);
+    toneGain.gain.setValueAtTime(isKaboom ? 0.12 : 0.08, now);
+    toneGain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+    tone.connect(toneGain);
+    toneGain.connect(audioContext.destination);
+    tone.start(now);
+    tone.stop(now + duration);
   }
 
   function update(delta, now) {
@@ -762,7 +806,8 @@
     hazards = hazards.filter((hazard) => hazard.x + hazard.w > 0);
     while (islands.length < DESTINATIONS_AHEAD) addIsland();
     while (hazards.length < HAZARDS_AHEAD) addHazard();
-    if (bird.y < 0 || bird.y + bird.height > HEIGHT) finishRun();
+    if (bird.y < 0) finishRun("kaboom");
+    else if (bird.y + bird.height > HEIGHT) finishRun("splat");
   }
 
   function roundedRect(x, y, width, height, radius, color, stroke) {
@@ -1005,8 +1050,10 @@
     ctx.textAlign = "center";
     ctx.fillStyle = "#ffdd82";
     ctx.font = "bold 28px Arial";
-    ctx.fillText(state === "record" ? "ROUTE COMPLETE!"
-      : runNewBest ? "NEW PERSONAL BEST!" : "ROUTE ENDED", WIDTH / 2, 124);
+    const impactTitle = deathImpact === "kaboom" ? "KABOOM!"
+      : deathImpact === "splat" ? "SPLAT!" : null;
+    ctx.fillText(impactTitle || (state === "record" ? "ROUTE COMPLETE!"
+      : runNewBest ? "NEW PERSONAL BEST!" : "ROUTE ENDED"), WIDTH / 2, 124);
     ctx.fillStyle = "#fff";
     ctx.font = "18px Arial";
     ctx.fillText(`Score ${score}   Best ${best}   Delivered ${deliveries}`, WIDTH / 2, 158);
@@ -1199,9 +1246,9 @@
     });
   });
   difficultyButton.addEventListener("click", () => {
-    if (state !== "menu") return;
+    if (state === "playing") return;
     applyDifficulty(difficultyIndex + 1);
-    newWorld();
+    if (state === "menu") newWorld();
   });
 
   nameForm.addEventListener("submit", async (event) => {
