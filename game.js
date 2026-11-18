@@ -232,8 +232,10 @@
       });
     }
     const metadata = user.user_metadata || {};
-    const fallbackGoogleName = (metadata.full_name || metadata.name || user.email?.split("@")[0] || "")
+    const emailPrefix = typeof user.email === "string" ? user.email.split("@")[0] : "";
+    const fallbackGoogleName = (metadata.full_name || metadata.name || emailPrefix || "Pilot")
       .trim().slice(0, 12);
+
     const resolvedName = (typeof metadata.display_name === "string"
       ? metadata.display_name.trim().slice(0, 12) : "") || fallbackGoogleName;
     if (!resolvedName) {
