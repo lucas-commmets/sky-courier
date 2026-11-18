@@ -29,9 +29,30 @@ body {
   min-height: 0;
   display: grid;
   justify-items: center;
+  grid-template-areas:
+    "heading"
+    "account"
+    "game"
+    "leaderboard"
+    "controls"
+    "name"
+    "history"
+    "install"
+    "footer";
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto auto minmax(0, 1fr) auto auto auto auto auto auto;
   gap: clamp(4px, 1vh, 9px);
 }
+
+.game-shell > header { grid-area: heading; }
+.account-bar { grid-area: account; }
+#game { grid-area: game; }
+#leaderboardTabs { grid-area: leaderboard; }
+.game-controls { grid-area: controls; }
+#nameForm { grid-area: name; }
+#historyDetails { grid-area: history; }
+#installButton { grid-area: install; }
+.game-shell > footer { grid-area: footer; }
 
 header {
   text-align: center;
