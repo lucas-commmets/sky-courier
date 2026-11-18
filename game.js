@@ -232,11 +232,21 @@
       });
     }
     const metadata = user.user_metadata || {};
-    const resolvedName = typeof metadata.display_name === "string"
-      ? metadata.display_name.trim().slice(0, 12) : "";
+    const fallbackGoogleName = (metadata.full_name || metadata.name || user.email?.split("@")[0] || "")
+      .trim().slice(0, 12);
+    const resolvedName = (typeof metadata.display_name === "string"
+      ? metadata.display_name.trim().slice(0, 12) : "") || fallbackGoogleName;
     if (!resolvedName) {
       throw new Error("This account has no display name. Enter one and log in again.");
     }
+    if (metadata.display_name !== resolvedName) {
+      user = await authRequest("user", {
+        method: "PUT",
+        accessToken: payload.access_token,
+        body: { data: { display_name: resolvedName } },
+      });
+    }
+
     authSession = {
       access_token: payload.access_token,
       refresh_token: payload.refresh_token,
@@ -1239,15 +1249,45 @@
   applyDifficulty(difficultyIndex);
   updateControls();
   newWorld();
+    if (googleLoginButton) {
+    googleLoginButton.addEventListener("click", () => {
+      if (!onlineLeaderboardEnabled) return;
+      const redirectUrl = encodeURIComponent(window.location.origin + window.location.pathname);
+      window.location.href = `${supabaseUrl}/auth/v1/authorize?provider=google&redirect_to=${redirectUrl}`;
+    });
+  }
+
+  async function handleOAuthCallback() {
+    if (!window.location.hash.includes("access_token=")) return false;
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const accessToken = hashParams.get("access_token");
+    if (!accessToken) return false;
+    history.replaceState(null, "", window.location.pathname + window.location.search);
+    const user = await authRequest("user", {
+      method: "GET",
+      accessToken,
+    });
+    await applyAuthSession({
+      access_token: accessToken,
+      refresh_token: hashParams.get("refresh_token") || "",
+      expires_in: Number(hashParams.get("expires_in")) || 3600,
+      user,
+    }, displayNameInput.value);
+    return true;
+  }
+
   if (onlineLeaderboardEnabled) {
     authPanel.hidden = false;
     gameShell.hidden = true;
-    restoreAuthSession().catch((error) => {
-      console.error("Could not restore the saved sign-in session.", error);
-      clearAuthSession();
-      setAuthStatus(error.message || "Your saved sign-in expired. Log in again.");
-    });
+    handleOAuthCallback()
+      .then((handled) => (handled ? true : restoreAuthSession()))
+      .catch((error) => {
+        console.error("Could not complete or restore the sign-in session.", error);
+        clearAuthSession();
+        setAuthStatus(error.message || "Your saved sign-in expired. Log in again.");
+      });
   } else {
+
     authPanel.hidden = true;
     gameShell.hidden = false;
     accountBar.hidden = true;
