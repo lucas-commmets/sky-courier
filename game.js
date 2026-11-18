@@ -27,6 +27,7 @@
   const accountBar = document.querySelector("#accountBar");
   const accountName = document.querySelector("#accountName");
   const logoutButton = document.querySelector("#logoutButton");
+  const googleLoginButton = document.querySelector("#googleLoginButton");
   const difficultyButton = document.querySelector("#difficultyButton");
   const actionButton = document.querySelector("#actionButton");
   const leaderboardTabs = document.querySelector("#leaderboardTabs");
