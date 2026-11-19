@@ -109,6 +109,61 @@ canvas {
   padding: 5px 10px;
 }
 
+#accountName {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.display-name-dialog {
+  width: min(calc(100% - 32px), 360px);
+  padding: 20px;
+  border: 1px solid #5ee0c7;
+  border-radius: 18px;
+  background: #123041;
+  color: #fff;
+  box-shadow: 0 16px 42px #07172299;
+}
+
+.display-name-dialog::backdrop {
+  background: #071722cc;
+}
+
+#displayNameForm {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+#displayNameDialogTitle {
+  margin: 0;
+  color: #ffdd82;
+  font-size: 1.3rem;
+}
+
+#displayNameForm label {
+  margin: 0;
+}
+
+#displayNameForm input {
+  width: 100%;
+}
+
+#displayNameStatus {
+  min-height: 1.25em;
+  margin: 0;
+  color: #ffdd82;
+}
+
+.display-name-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
 .leaderboard-tabs button {
   flex: 1;
   min-width: 0;
