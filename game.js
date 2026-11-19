@@ -26,7 +26,13 @@
   const authStatus = document.querySelector("#authStatus");
   const accountBar = document.querySelector("#accountBar");
   const accountName = document.querySelector("#accountName");
+  const editDisplayNameButton = document.querySelector("#editDisplayNameButton");
   const logoutButton = document.querySelector("#logoutButton");
+  const displayNameDialog = document.querySelector("#displayNameDialog");
+  const displayNameForm = document.querySelector("#displayNameForm");
+  const newDisplayNameInput = document.querySelector("#newDisplayName");
+  const displayNameStatus = document.querySelector("#displayNameStatus");
+  const cancelDisplayNameButton = document.querySelector("#cancelDisplayNameButton");
   const googleLoginButton = document.querySelector("#googleLoginButton");
   const difficultyButton = document.querySelector("#difficultyButton");
   const actionButton = document.querySelector("#actionButton");
@@ -369,6 +375,34 @@
       console.error("Could not load the online leaderboard.", error);
       return false;
     }
+  }
+
+  async function saveDisplayName(name) {
+    await ensureFreshAuthSession();
+    const response = await fetch(`${supabaseUrl}/rest/v1/rpc/update_display_name`, {
+      method: "POST",
+      headers: { ...supabaseHeaders(), "Content-Type": "application/json" },
+      body: JSON.stringify({ p_name: name }),
+    });
+    if (!response.ok) {
+      const detail = await response.text();
+      throw new Error(detail || `Could not update display name (${response.status}).`);
+    }
+
+    currentDisplayName = name;
+    playerName = name;
+    currentUser = {
+      ...currentUser,
+      user_metadata: { ...(currentUser.user_metadata || {}), display_name: name },
+    };
+    authSession.user = currentUser;
+    persistAuthSession(authSession);
+    accountName.textContent = `Signed in as ${currentDisplayName}`;
+    leaderboard = leaderboard.map((entry) => (
+      entry.userId === currentUser.id ? { ...entry, name } : entry
+    ));
+    if (historyDetails.open) loadAttemptHistory();
+    refreshLeaderboard();
   }
 
   async function saveLeaderboard(name, scoreValue) {
@@ -1173,6 +1207,37 @@
   });
 
   actionButton.addEventListener("click", activateAction);
+  editDisplayNameButton.addEventListener("click", () => {
+    newDisplayNameInput.value = currentDisplayName;
+    displayNameStatus.textContent = "";
+    displayNameDialog.showModal();
+    newDisplayNameInput.focus();
+    newDisplayNameInput.select();
+  });
+  cancelDisplayNameButton.addEventListener("click", () => displayNameDialog.close());
+  displayNameForm.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const name = newDisplayNameInput.value.trim().slice(0, 12);
+    if (!name) {
+      displayNameStatus.textContent = "Enter a name first.";
+      newDisplayNameInput.focus();
+      return;
+    }
+
+    const submitButton = displayNameForm.querySelector('button[type="submit"]');
+    submitButton.disabled = true;
+    displayNameStatus.textContent = "Updating your name...";
+    try {
+      await saveDisplayName(name);
+      displayNameStatus.textContent = "Display name updated.";
+      displayNameDialog.close();
+    } catch (error) {
+      console.error("Could not update the display name.", error);
+      displayNameStatus.textContent = error.message || "Could not update the display name.";
+    } finally {
+      submitButton.disabled = false;
+    }
+  });
   authForm.addEventListener("submit", async (event) => {
     event.preventDefault();
     if (!onlineLeaderboardEnabled) return;
