@@ -47,6 +47,7 @@
     </header>
     <div id="accountBar" class="account-bar" hidden>
       <span id="accountName"></span>
+      <button id="editDisplayNameButton" type="button">Edit name</button>
       <button id="logoutButton" type="button">Log out</button>
     </div>
     <canvas id="game" width="360" height="640" aria-label="Sky Courier game"></canvas>
@@ -79,6 +80,20 @@
     </details>
     <button id="installButton" class="install-button" type="button" hidden>Install game</button>
     <footer>Install from your browser. Your personal best stays on this device.</footer>
+    <dialog id="displayNameDialog" class="display-name-dialog"
+      aria-labelledby="displayNameDialogTitle">
+      <form id="displayNameForm">
+        <h2 id="displayNameDialogTitle">Change display name</h2>
+        <label for="newDisplayName">New leaderboard name</label>
+        <input id="newDisplayName" name="displayName" maxlength="12"
+          autocomplete="nickname" required>
+        <p id="displayNameStatus" role="status" aria-live="polite"></p>
+        <div class="display-name-actions">
+          <button id="cancelDisplayNameButton" type="button">Cancel</button>
+          <button type="submit">Save name</button>
+        </div>
+      </form>
+    </dialog>
   </main>
   <script src="./config.js"></script>
   <script src="./game.js" defer></script>
