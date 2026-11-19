@@ -1193,7 +1193,6 @@
   });
 
   canvas.addEventListener("pointerdown", (event) => {
-    event.preventDefault();
     if (state === "menu" || state === "over") {
       activateAction();
     } else if (state === "playing") {
@@ -1202,9 +1201,11 @@
       chirp();
     }
   });
-  window.addEventListener("pointerup", () => {
+  const releasePointer = () => {
     pointerHeld = false;
-  });
+  };
+  window.addEventListener("pointerup", releasePointer);
+  window.addEventListener("pointercancel", releasePointer);
 
   actionButton.addEventListener("click", activateAction);
   editDisplayNameButton.addEventListener("click", () => {
